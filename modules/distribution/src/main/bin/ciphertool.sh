@@ -97,9 +97,19 @@ if $cygwin; then
   JAVA_ENDORSED_DIRS=`cygpath --path --windows "$JAVA_ENDORSED_DIRS"`
 fi
 
+# endorsed dir
+ENDORSED_PROP=
+# -Djava.endorsed.dirs is removed from Java 9+.
+jdk_16=`$JAVA_HOME/bin/java -version 2>&1 | grep 1.6`
+jdk_17=`$JAVA_HOME/bin/java -version 2>&1 | grep 1.7`
+jdk_18=`$JAVA_HOME/bin/java -version 2>&1 | grep 1.8`
+if [ "$jdk_16" -o "$jdk_17" -o "$jdk_18" ]; then
+    ENDORSED_PROP="-Djava.endorsed.dirs=$SYNAPSE_HOME/lib/endorsed:$JAVA_HOME/jre/lib/endorsed:$JAVA_HOME/lib/endorsed"
+fi
+
 # ----- Execute The Requested Command -----------------------------------------
 
 $JAVA_HOME/bin/java \
 -classpath "$SYNAPSE_CLASSPATH" \
--Djava.endorsed.dirs="$SYNAPSE_HOME/lib/endorsed":"$JAVA_HOME/jre/lib/endorsed":"$JAVA_HOME/lib/endorsed" \
+$ENDORSED_PROP \
 org.apache.synapse.securevault.tool.CipherTool $*

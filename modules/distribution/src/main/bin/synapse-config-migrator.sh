@@ -106,6 +106,14 @@ if $cygwin; then
 fi
 # endorsed dir
 SYNAPSE_ENDORSED=$SYNAPSE_HOME/lib/endorsed
+ENDORSED_PROP=
+# -Djava.endorsed.dirs is removed from Java 9+.
+jdk_16=`$JAVA_HOME/bin/java -version 2>&1 | grep 1.6`
+jdk_17=`$JAVA_HOME/bin/java -version 2>&1 | grep 1.7`
+jdk_18=`$JAVA_HOME/bin/java -version 2>&1 | grep 1.8`
+if [ "$jdk_16" -o "$jdk_17" -o "$jdk_18" ]; then
+    ENDORSED_PROP="-Djava.endorsed.dirs=$SYNAPSE_ENDORSED"
+fi
 
 MIGRATING_CONFIG=$SYNAPSE_HOME/repository/conf/synapse.xml
 if $1; then
@@ -126,7 +134,7 @@ mv $MIGRATING_CONFIG $MIGRATING_CONFIG.back
 $JAVA_HOME/bin/java -server -Xms128M -Xmx128M \
     $TEMP_PROPS \
     -Dorg.apache.xerces.xni.parser.XMLParserConfiguration=org.apache.xerces.parsers.XMLGrammarCachingConfiguration \
-    -Djava.endorsed.dirs=$SYNAPSE_ENDORSED \
+    $ENDORSED_PROP \
     -Djava.io.tmpdir=$SYNAPSE_HOME/work/temp/synapse \
     -classpath $SYNAPSE_CLASSPATH \
     org.apache.synapse.migrator.ConfigurationMigrator \
