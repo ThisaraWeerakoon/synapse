@@ -81,9 +81,23 @@ echo Using SYNAPSE_HOME:   %SYNAPSE_HOME%
 echo Using JAVA_HOME:    %JAVA_HOME%
 set _RUNJAVA="%JAVA_HOME%\bin\java"
 
+rem endorsed dir
 set JAVA_ENDORSED=".\lib\endorsed";"%JAVA_HOME%\jre\lib\endorsed";"%JAVA_HOME%\lib\endorsed"
+set ENDORSED_PROP=
 
-%_RUNJAVA% %JAVA_OPTS% -cp "%SYNAPSE_CLASSPATH%"  %_XDEBUG% -Djava.endorsed.dirs=%JAVA_ENDORSED% org.apache.synapse.securevault.tool.CipherTool %*
+rem -Djava.endorsed.dirs is removed from Java 9+. Passing it to a Java 9+ JVM
+rem prevents the JVM from starting at all, so only set it on Java 1.6/1.7/1.8.
+%_RUNJAVA% -version > "%TEMP%\synapse-java-version.txt" 2>&1
+for /f tokens^=3 %%v in ('findstr /i "version" "%TEMP%\synapse-java-version.txt"') do set JAVA_VERSION=%%~v
+del "%TEMP%\synapse-java-version.txt" 2>nul
+for /f "delims=. tokens=1,2" %%a in ("!JAVA_VERSION!") do set JAVA_MAJOR=%%a&set JAVA_MINOR=%%b
+if not "!JAVA_MAJOR!"=="1" goto runCipherTool
+if "!JAVA_MINOR!"=="6" set ENDORSED_PROP=-Djava.endorsed.dirs=%JAVA_ENDORSED%
+if "!JAVA_MINOR!"=="7" set ENDORSED_PROP=-Djava.endorsed.dirs=%JAVA_ENDORSED%
+if "!JAVA_MINOR!"=="8" set ENDORSED_PROP=-Djava.endorsed.dirs=%JAVA_ENDORSED%
+
+:runCipherTool
+%_RUNJAVA% %JAVA_OPTS% -cp "%SYNAPSE_CLASSPATH%"  %_XDEBUG% !ENDORSED_PROP! org.apache.synapse.securevault.tool.CipherTool %*
 endlocal
 :end
 
