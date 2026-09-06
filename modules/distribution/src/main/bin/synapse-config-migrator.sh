@@ -116,7 +116,7 @@ if [ "$jdk_16" -o "$jdk_17" -o "$jdk_18" ]; then
 fi
 
 MIGRATING_CONFIG=$SYNAPSE_HOME/repository/conf/synapse.xml
-if $1; then
+if [ -n "$1" ]; then
   MIGRATING_CONFIG=$1
 fi
 
