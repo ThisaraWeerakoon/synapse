@@ -115,6 +115,14 @@ fi
 
 # endorsed dir
 AXIS2_ENDORSED=$AXIS2_HOME/../../lib/endorsed
+ENDORSED_PROP=
+# -Djava.endorsed.dirs is removed from Java 9+. Pre-9 version strings are
+# reported as "1.x" (e.g. "1.8.0_382"); 9+ versions are reported as "9",
+# "11.0.2", "17.0.9", etc.
+jdk_pre9=`$JAVA_HOME/bin/java -version 2>&1 | grep '"1\.'`
+if [ "$jdk_pre9" ]; then
+    ENDORSED_PROP="-Djava.endorsed.dirs=$AXIS2_ENDORSED"
+fi
 
 echo " Using JAVA_HOME:   $JAVA_HOME"
 echo " Using AXIS2 Repository :   $AXIS2_HOME/repository"
@@ -159,5 +167,5 @@ if [ "$HTTPS_PORT_SET" = "FALSE" ]; then
 	PROGRAM_PARAMS="$PROGRAM_PARAMS""-Dhttps_port=9002 "
 fi
 
-java $PROGRAM_PARAMS -Djava.io.tmpdir=$AXIS2_HOME/../../work/temp/sampleServer -Djava.endorsed.dirs=$AXIS2_ENDORSED -classpath $AXIS2_CLASSPATH samples.util.SampleAxis2Server \
+java $PROGRAM_PARAMS -Djava.io.tmpdir=$AXIS2_HOME/../../work/temp/sampleServer $ENDORSED_PROP -classpath $AXIS2_CLASSPATH samples.util.SampleAxis2Server \
 -repo $AXIS2_HOME/repository -conf $AXIS2_HOME/repository/conf/axis2.xml
