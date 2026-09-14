@@ -44,7 +44,7 @@
     </target>
 
     <target name="compile-all" depends="init">
-        <javac debug="on" destdir="${classes}">
+        <javac debug="on" destdir="${classes}" source="1.8" target="1.8">
             <src path="${src}"/>
             <classpath refid="synapse.class.path"/>
         </javac>
