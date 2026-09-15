@@ -303,6 +303,7 @@ public class ServerWorker implements Runnable {
             SourceResponse sourceResponse;
             if (!nioAck) {
                 msgContext.removeProperty(MessageContext.TRANSPORT_HEADERS);
+                msgContext.removeProperty(NhttpConstants.EXCESS_TRANSPORT_HEADERS);
                 sourceResponse = SourceResponseFactory.create(msgContext,
                         request, sourceConfiguration);
                 sourceResponse.setStatus(HttpStatus.SC_ACCEPTED);

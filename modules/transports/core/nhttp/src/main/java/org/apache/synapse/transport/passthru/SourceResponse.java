@@ -34,6 +34,8 @@ import org.apache.axis2.util.MessageProcessorSelector;
 import org.apache.synapse.transport.passthru.util.RelayUtils;
 import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.io.output.NullOutputStream;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -43,6 +45,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class SourceResponse {
+
+    private static final Log log = LogFactory.getLog(SourceResponse.class);
 
     private Pipe pipe = null;
 
@@ -111,15 +115,29 @@ public class SourceResponse {
         BasicHttpEntity entity = new BasicHttpEntity();
 
         int contentLength = -1;
-    	String contentLengthHeader = null; 
-        if(headers.get(HTTP.CONTENT_LEN) != null && headers.get(HTTP.CONTENT_LEN).size() > 0) {
-        	contentLengthHeader = headers.get(HTTP.CONTENT_LEN).first();
-        } 
+    	String contentLengthHeader = null;
+        Iterator<Map.Entry<String, TreeSet<String>>> headerIterator = headers.entrySet().iterator();
+        while (headerIterator.hasNext()) {
+            Map.Entry<String, TreeSet<String>> header = headerIterator.next();
+            String headerName = header.getKey();
+            if (HTTP.CONTENT_LEN.equalsIgnoreCase(headerName)) {
+                if (contentLengthHeader == null && header.getValue() != null
+                        && !header.getValue().isEmpty()) {
+                    contentLengthHeader = header.getValue().first();
+                }
+                headerIterator.remove();
+            } else if (HTTP.TRANSFER_ENCODING.equalsIgnoreCase(headerName)) {
+                headerIterator.remove();
+            }
+        }
 
-        if (contentLengthHeader != null) {
-            contentLength = Integer.parseInt(contentLengthHeader);
-
-            headers.remove(HTTP.CONTENT_LEN);
+        if (contentLengthHeader != null && pipe != null) {
+            try {
+                contentLength = Integer.parseInt(contentLengthHeader);
+            } catch (NumberFormatException e) {
+                log.warn("Ignoring malformed Content-Length header value : " + contentLengthHeader);
+                contentLength = -1;
+            }
         }
 
         if (contentLength != -1) {
