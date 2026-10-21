@@ -80,6 +80,18 @@ public class MediatorProperty {
                     axis2smc.getAxis2MessageContext();
             axis2MessageCtx.getOptions().setProperty(name, result);
         } else if (XMLConfigConstants.SCOPE_TRANSPORT.equals(scope)) {
+
+            // A transport header occupies a single CRLF-terminated line on the wire, so a header
+            // name or value must not itself contain CR, LF or NUL. When the value is computed from
+            // message content these characters can appear (for example the XML character references
+            // &#13;&#10; decode to literal CR/LF when the payload is parsed); emitting them would
+            // split one configured header into several. Reject such an assignment so that one
+            // configured header always produces exactly one header.
+            if (TransportHeaderUtils.containsCRLFOrNul(name)
+                    || TransportHeaderUtils.containsCRLFOrNul(result)) {
+                throw new SynapseException("Invalid transport header '" + name + "' : a header name "
+                        + "and value must not contain CR, LF or NUL characters");
+            }
             //Setting Transport Headers
             Axis2MessageContext axis2smc = (Axis2MessageContext) synCtx;
             org.apache.axis2.context.MessageContext axis2MessageCtx =

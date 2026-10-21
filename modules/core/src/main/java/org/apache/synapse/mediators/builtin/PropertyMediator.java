@@ -27,6 +27,7 @@ import org.apache.synapse.config.xml.XMLConfigConstants;
 import org.apache.synapse.config.SynapseConfigUtils;
 import org.apache.synapse.core.axis2.Axis2MessageContext;
 import org.apache.synapse.mediators.AbstractMediator;
+import org.apache.synapse.mediators.TransportHeaderUtils;
 import org.apache.synapse.util.xpath.SynapseXPath;
 import org.apache.axiom.om.OMElement;
 import org.apache.axis2.util.JavaUtils;
@@ -131,6 +132,19 @@ public class PropertyMediator extends AbstractMediator {
 
             } else if (XMLConfigConstants.SCOPE_TRANSPORT.equals(scope)
                     && synCtx instanceof Axis2MessageContext) {
+
+                // A transport header occupies a single CRLF-terminated line on the wire, so a
+                // header name or value must not itself contain CR, LF or NUL. When the value is
+                // computed from message content these characters can appear (for example the XML
+                // character references &#13;&#10; decode to literal CR/LF when the payload is
+                // parsed); emitting them would split one configured header into several. Reject such
+                // an assignment so that one configured header always produces exactly one header.
+                if (TransportHeaderUtils.containsCRLFOrNul(name)
+                        || (resultValue instanceof String
+                            && TransportHeaderUtils.containsCRLFOrNul((String) resultValue))) {
+                    handleException("Invalid transport header '" + name + "' : a header name "
+                            + "and value must not contain CR, LF or NUL characters", synCtx);
+                }
                 //Setting Transport Headers
                 Axis2MessageContext axis2smc = (Axis2MessageContext) synCtx;
                 org.apache.axis2.context.MessageContext axis2MessageCtx =

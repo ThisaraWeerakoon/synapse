@@ -250,6 +250,37 @@ public class PropertyMediatorTest extends TestCase {
         assertEquals("", synCtx.getProperty(outputProperty));
     }
 
+    /**
+     * A transport scoped property becomes an outgoing HTTP header, which occupies a single
+     * CRLF-terminated line on the wire. A value carrying CR/LF (which a computed value can, e.g.
+     * when &#13;&#10; character references in message content are decoded) cannot be one header.
+     * Setting such a value must fail rather than emit a header that splits into several lines, and
+     * no partial header must be left behind.
+     */
+    public void testTransportHeaderCRLFRejected() throws Exception {
+
+        PropertyMediator propMediator = new PropertyMediator();
+        propMediator.setName("X-Order-Ref");
+        propMediator.setValue("123\r\nX-Admin: true");
+        propMediator.setScope(XMLConfigConstants.SCOPE_TRANSPORT);
+
+        MessageContext synCtx = TestUtils.createLightweightSynapseMessageContext("<empty/>");
+        try {
+            propMediator.mediate(synCtx);
+            fail("PropertyMediator should reject a transport header value containing CR/LF");
+        } catch (Exception expected) {
+            // expected - a value that would split the header line must be rejected
+        }
+
+        org.apache.axis2.context.MessageContext axisCtx =
+                ((Axis2MessageContext) synCtx).getAxis2MessageContext();
+        Object transportHeaders = axisCtx.getProperty(
+                org.apache.axis2.context.MessageContext.TRANSPORT_HEADERS);
+        assertTrue("No transport header should have been set",
+                transportHeaders == null || !(transportHeaders instanceof Map)
+                        || ((Map) transportHeaders).get("X-Order-Ref") == null);
+    }
+
 }
 
 

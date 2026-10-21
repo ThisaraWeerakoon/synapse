@@ -32,6 +32,7 @@ import org.apache.synapse.SynapseLog;
 import org.apache.synapse.config.xml.XMLConfigConstants;
 import org.apache.synapse.core.axis2.Axis2MessageContext;
 import org.apache.synapse.mediators.AbstractMediator;
+import org.apache.synapse.mediators.TransportHeaderUtils;
 import org.apache.synapse.util.xpath.SynapseXPath;
 
 import javax.xml.namespace.QName;
@@ -182,6 +183,18 @@ public class HeaderMediator extends AbstractMediator {
         String value = (getExpression() == null ? getValue() : expression.stringValueOf(synCtx));
 
         if (action == ACTION_SET) {
+
+            // A transport header occupies a single CRLF-terminated line on the wire, so a header
+            // name or value must not itself contain CR, LF or NUL. When the value is computed from
+            // message content these characters can appear (for example the XML character references
+            // &#13;&#10; decode to literal CR/LF when the payload is parsed); emitting them would
+            // split one configured header into several. Reject such an assignment so that one
+            // configured header always produces exactly one header.
+            if (TransportHeaderUtils.containsCRLFOrNul(headerName)
+                    || TransportHeaderUtils.containsCRLFOrNul(value)) {
+                handleException("Invalid transport header '" + headerName + "' : a header name "
+                        + "and value must not contain CR, LF or NUL characters", synCtx);
+            }
 
             if (synLog.isTraceOrDebugEnabled()) {
                 synLog.traceOrDebug("Setting Transport header : " + headerName + " to : " + value);
