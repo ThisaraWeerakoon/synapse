@@ -46,6 +46,9 @@ public class JmxInformation {
     /** Use remote SSL? */
     private boolean remoteSSL;
 
+    /** Allow the remote connector to start without authentication? Defaults to false. */
+    private boolean allowInsecure;
+
     /** JEP 290 filter pattern used by remote JMX RMI deserialization. */
     private String remoteSerialFilterPattern;
     
@@ -116,6 +119,14 @@ public class JmxInformation {
 
     public void setRemoteSSL(boolean remoteSSL) {
         this.remoteSSL = remoteSSL;
+    }
+
+    public boolean isAllowInsecure() {
+        return allowInsecure;
+    }
+
+    public void setAllowInsecure(boolean allowInsecure) {
+        this.allowInsecure = allowInsecure;
     }
 
     public String getRemoteSerialFilterPattern() {

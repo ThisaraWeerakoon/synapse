@@ -73,4 +73,45 @@ public class JmxAdapterContextMapTest extends TestCase {
         assertNotNull(env.get("jmx.remote.rmi.client.socket.factory"));
         assertNotNull(env.get("jmx.remote.rmi.server.socket.factory"));
     }
+
+    /**
+     * An enabled connector with no authentication configured and no explicit opt-in must not be
+     * brought up: {@code start()} returns before any RMI registry or connector is created.
+     */
+    public void testStartRefusedWhenUnauthenticatedAndNotOptedIn() {
+        JmxInformation info = new JmxInformation();
+        info.setJndiPort(0);
+        info.setAuthenticate(false);
+        info.setAllowInsecure(false);
+
+        JmxAdapter adapter = new JmxAdapter(info);
+        try {
+            adapter.start();
+            assertFalse("connector must not start without authentication unless explicitly allowed",
+                    adapter.isRunning());
+        } finally {
+            adapter.stop();
+        }
+    }
+
+    /**
+     * With the explicit insecure opt-in, the connector is allowed to start even without
+     * authentication.
+     */
+    public void testStartProceedsWhenInsecureExplicitlyAllowed() {
+        JmxInformation info = new JmxInformation();
+        info.setJndiPort(0);
+        info.setAuthenticate(false);
+        info.setAllowInsecure(true);
+        info.setRemoteSSL(false);
+
+        JmxAdapter adapter = new JmxAdapter(info);
+        try {
+            adapter.start();
+            assertTrue("connector should start when insecure operation is explicitly allowed",
+                    adapter.isRunning());
+        } finally {
+            adapter.stop();
+        }
+    }
 }

@@ -41,6 +41,12 @@ public class JmxConfigurationConstants {
     /** Property to activate remote SSL support (same as com.sun.management.jmxremote.ssl) */
     public static final String PROP_REMOTE_SSL = "remote.ssl";
 
+    /**
+     * Property to allow the remote JMX connector to start without authentication. When false (the
+     * default), an enabled connector that has no credentials configured is not started.
+     */
+    public static final String PROP_REMOTE_ALLOW_INSECURE = "remote.allow.insecure";
+
     /** Property to configure JEP 290 serial filter for remote JMX RMI. */
     public static final String PROP_REMOTE_SERIAL_FILTER_PATTERN = "remote.serial.filter.pattern";
 

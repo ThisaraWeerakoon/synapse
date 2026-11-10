@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.synapse.securevault.PasswordManager;
 import org.apache.synapse.securevault.secret.SecretInformation;
 import org.apache.synapse.commons.util.RMIRegistryController;
+import org.apache.synapse.commons.jmx.JmxConfigurationConstants;
 import org.apache.synapse.commons.jmx.JmxInformation;
 import org.apache.synapse.commons.jmx.JmxSecretAuthenticator;
 import org.apache.synapse.jmx.JmxSerializationFilterSupport;
@@ -92,6 +93,24 @@ public class JmxAdapter {
      *                            cannot be started
      */
     public void start() {
+        if (!jmxInformation.isAuthenticate() && !jmxInformation.isAllowInsecure()) {
+            log.error("Remote JMX connector not started: no authentication is configured. "
+                    + "An unauthenticated connector grants any peer that can reach the port full "
+                    + "control of the server's MBeans. Configure " + JmxConfigurationConstants.PROP_SYNAPSE_PREFIX_JMX
+                    + "username and " + JmxConfigurationConstants.PROP_SYNAPSE_PREFIX_JMX + "password "
+                    + "(or a com.sun.management.jmxremote password file), or set "
+                    + JmxConfigurationConstants.PROP_SYNAPSE_PREFIX_JMX
+                    + JmxConfigurationConstants.PROP_REMOTE_ALLOW_INSECURE
+                    + "=true to start it without authentication anyway.");
+            return;
+        }
+
+        if (!jmxInformation.isRemoteSSL()) {
+            log.warn("Remote JMX connector is starting without SSL: credentials and traffic cross "
+                    + "the network in cleartext. Set " + JmxConfigurationConstants.PROP_SYNAPSE_PREFIX_JMX
+                    + JmxConfigurationConstants.PROP_REMOTE_SSL + "=true (with a keystore) to encrypt it.");
+        }
+
         initConfiguration();
 
         try {

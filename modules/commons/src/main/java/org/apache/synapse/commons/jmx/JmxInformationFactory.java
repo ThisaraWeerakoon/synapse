@@ -117,6 +117,11 @@ public class JmxInformationFactory {
         }
         jmxInformation.setRemoteSSL(remoteSSL);
 
+        Boolean allowInsecure = MiscellaneousUtil.getProperty(properties,
+                prefix + JmxConfigurationConstants.PROP_REMOTE_ALLOW_INSECURE,
+                Boolean.FALSE, Boolean.class);
+        jmxInformation.setAllowInsecure(allowInsecure);
+
         value = MiscellaneousUtil.getProperty(properties,
                 prefix + JmxConfigurationConstants.PROP_REMOTE_SERIAL_FILTER_PATTERN, null);
         if (value != null && value.trim().length() > 0) {

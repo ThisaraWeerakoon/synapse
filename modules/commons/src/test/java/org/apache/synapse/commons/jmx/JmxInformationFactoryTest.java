@@ -60,4 +60,30 @@ public class JmxInformationFactoryTest extends TestCase {
 
         assertNull(info.getRemoteSerialFilterPattern());
     }
+
+    public void testAllowInsecureDefaultsToFalse() {
+        Properties properties = new Properties();
+
+        JmxInformation info = JmxInformationFactory.createJmxInformation(properties, "localhost");
+
+        assertFalse(info.isAllowInsecure());
+    }
+
+    public void testAllowInsecureOptInParses() {
+        Properties properties = new Properties();
+        properties.setProperty("synapse.jmx.remote.allow.insecure", "true");
+
+        JmxInformation info = JmxInformationFactory.createJmxInformation(properties, "localhost");
+
+        assertTrue(info.isAllowInsecure());
+    }
+
+    public void testAllowInsecureGarbageValueIsFalse() {
+        Properties properties = new Properties();
+        properties.setProperty("synapse.jmx.remote.allow.insecure", "yes-please");
+
+        JmxInformation info = JmxInformationFactory.createJmxInformation(properties, "localhost");
+
+        assertFalse(info.isAllowInsecure());
+    }
 }
